@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pibody Match Engine — Studio d'Intelligence Relationnelle</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo">PM</div>
+        <div>
+          <strong>Pibody Match</strong>
+          <span>Relational Intelligence</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" data-view="discover" onclick="switchView('discover')">
+          1 · Need Discovery
+        </button>
+        <button class="nav-item" data-view="explorer" onclick="switchView('explorer')">
+          2 · Explorer & Skill Path
+        </button>
+        <button class="nav-item" data-view="graph" onclick="switchView('graph')">
+          3 · Relationship Graph
+        </button>
+        <button class="nav-item" data-view="team" onclick="switchView('team')">
+          4 · Team Composer
+        </button>
+        <button class="nav-item" data-view="governance" onclick="switchView('governance')">
+          5 · Optimisation & Audit
+        </button>
+      </nav>
+
+      <div class="sidebar-actions">
+        <button class="btn-primary full" onclick="openModal('modal-entity')">
+          + Enregistrer une entite
+        </button>
+      </div>
+
+      <div class="card" style="padding:12px;margin:0;font-size:0.8rem">
+        <strong>Coffre-fort Confidentiel</strong>
+        <p class="muted" id="vault-status" style="margin:6px 0 8px">
+          0 entite en memoire protegee
+        </p>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="chip" onclick="loadSandbox()">Catalogue demo</button>
+          <button class="chip" onclick="resetSandbox()">Vider</button>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="btn-outline full" onclick="toggleTheme()">
+          Theme : Sombre / Clair
+        </button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <h1 id="page-title">Need Discovery — Exprimer un Besoin</h1>
+          <p class="muted" id="page-sub">
+            Privacy-by-Design : les identites restent protegees jusqu'a la validation d'un match mutuel
+          </p>
+        </div>
+        <span class="badge-blue" id="active-universe-badge">En attente de besoin</span>
+      </header>
+
+      <div id="consent-banner" class="card" style="border-left:4px solid var(--accent,#6366f1);margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap">
+        <div>
+          <strong>Gouvernance &amp; Confidentialite des Donnees (RGPD / Code du Numerique)</strong>
+          <p class="muted" style="margin:4px 0 0;font-size:0.84rem">
+            En acceptant, vous autorisez le traitement local de vos recherches et la conservation pseudonymisee des profils enregistres pour l'appariement avec d'autres utilisateurs. Aucune identite n'est revelee sans match mutuel valide.
+          </p>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="btn-primary" onclick="submitConsent(true)">Accepter et continuer</button>
+          <button type="button" class="btn-outline" onclick="submitConsent(false)">Refuser (lecture seule)</button>
+        </div>
+      </div>
+
+      <!-- VUE 1 : NEED DISCOVERY -->
+      <section id="view-discover" class="view active">
+        <div class="card hero-card">
+          <label class="hero-label">Decrivez librement votre besoin, objectif ou projet</label>
+          <div class="query-bar">
+            <textarea id="need-input" rows="2"
+              placeholder="Ex: Je souhaite apprendre le Machine Learning avec un mentor experimente..."></textarea>
+            <button class="btn-primary" onclick="runDiscovery()">Analyser & Explorer</button>
+          </div>
+          <div class="scenario-chips">
+            <button class="chip" onclick="useScenario('Je souhaite apprendre le développement de l intelligence artificielle avec un mentor expérimenté')">
+              Apprentissage & Mentorat IA
+            </button>
+            <button class="chip" onclick="useScenario('Je cherche trois personnes complémentaires pour construire une plateforme éducative en Python, React et UI/UX Design')">
+              Constituer une equipe (3 pers.)
+            </button>
+            <button class="chip" onclick="useScenario('J ai des compétences en cybersécurité et Docker et je cherche un projet où les mettre en pratique')">
+              Projet en Cybersecurite
+            </button>
+            <button class="chip" onclick="useScenario('Je cherche une communauté technologique active pour collaborer sur des projets Python et IA')">
+              Rejoindre une communaute
+            </button>
+          </div>
+        </div>
+
+        <div class="grid-2-wide">
+          <div class="card" id="need-intelligence-card"></div>
+          <div class="card" id="clarification-card"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>Connexions & Révélation Progressive</h2>
+            <span class="badge-green" id="unlock-counter">0 identite revelee</span>
+          </div>
+          <div id="discover-matches" class="cards-grid"></div>
+        </div>
+      </section>
+
+      <!-- VUE 2 : UNIVERSAL MATCH EXPLORER & SKILL PATH -->
+      <section id="view-explorer" class="view">
+        <div class="filter-bar">
+          <button class="chip active" data-kind="all" onclick="setKindFilter('all', this)">Tous</button>
+          <button class="chip" data-kind="personne" onclick="setKindFilter('personne', this)">Personnes</button>
+          <button class="chip" data-kind="mentor" onclick="setKindFilter('mentor', this)">Mentors</button>
+          <button class="chip" data-kind="projet" onclick="setKindFilter('projet', this)">Projets</button>
+          <button class="chip" data-kind="formation_ressource" onclick="setKindFilter('formation_ressource', this)">Ressources</button>
+          <button class="chip" data-kind="communaute" onclick="setKindFilter('communaute', this)">Communautes</button>
+        </div>
+
+        <div class="split-view">
+          <div class="card">
+            <h2>Entites Evaluees</h2>
+            <div id="explorer-list" class="cand-stack"></div>
+          </div>
+          <div class="card" id="explorer-detail"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>Skill Path Intelligence — Transformer les Lacunes en Opportunites</h2>
+            <span class="badge-green">Parcours personnalises</span>
+          </div>
+          <div id="skill-pathways" class="cards-grid"></div>
+        </div>
+      </section>
+
+      <!-- VUE 3 : PIBODY RELATIONSHIP GRAPH -->
+      <section id="view-graph" class="view">
+        <div class="grid-2-wide">
+          <div class="card">
+            <div class="card-head">
+              <h2>Pibody Relationship Graph (Besoin · Competences · Entites)</h2>
+              <span class="muted">Passerelles directes et decouvertes inter-univers</span>
+            </div>
+            <div id="graph-canvas" class="graph-box"></div>
+          </div>
+          <div class="card" id="serendipity-panel"></div>
+        </div>
+      </section>
+
+      <!-- VUE 4 : TEAM & OPPORTUNITY COMPOSER -->
+      <section id="view-team" class="view">
+        <div class="card" id="team-summary-card"></div>
+        <div id="team-members-grid" class="cards-grid"></div>
+      </section>
+
+      <!-- VUE 5 : OPTIMISATION COMBINATOIRE & GOUVERNANCE -->
+      <section id="view-governance" class="view">
+        <div class="card">
+          <div class="card-head">
+            <h2>Simulateur Multicritere (w1 + w2 + w3 + w4 = 1)</h2>
+            <div class="presets">
+              <button class="btn-outline" onclick="applyPreset(0.40,0.20,0.20,0.20)">Equilibre (40/20/20/20)</button>
+              <button class="btn-outline" onclick="applyPreset(0.55,0.10,0.15,0.20)">Tech & Skills (55/10/15/20)</button>
+              <button class="btn-outline" onclick="applyPreset(0.25,0.40,0.15,0.20)">Objectifs (25/40/15/20)</button>
+            </div>
+          </div>
+          <div class="sim-grid">
+            <div><label>Competences</label><input id="w-skills" type="number" step="0.05" value="0.40" /></div>
+            <div><label>Objectifs</label><input id="w-obj" type="number" step="0.05" value="0.20" /></div>
+            <div><label>Experience</label><input id="w-exp" type="number" step="0.05" value="0.20" /></div>
+            <div><label>Exigences</label><input id="w-req" type="number" step="0.05" value="0.20" /></div>
+            <div>
+              <label class="check-label"><input type="checkbox" id="strict-mode" /> Strict</label>
+              <button class="btn-primary" onclick="recalculate()">Recalculer</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head">
+              <h2>Affectation Globale (Hongrois)</h2>
+              <span class="badge-blue" id="hungarian-avg"></span>
+            </div>
+            <p class="muted" style="font-size:0.8rem">Maximise la somme globale des compatibilites sur l'ensemble du reseau.</p>
+            <table id="hungarian-table"></table>
+          </div>
+          <div class="card">
+            <div class="card-head">
+              <h2>Appariement Stable (Gale-Shapley)</h2>
+              <span class="badge-green" id="gs-stable"></span>
+            </div>
+            <p class="muted" style="font-size:0.8rem">Garantit qu'aucune paire candidat/mission ne prefere se choisir mutuellement.</p>
+            <table id="gs-table"></table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>Equite & Journal d'Audit Humain (SQLite)</h2>
+            <span class="badge-green" id="fairness-badge">Anonymisation neutre : Valide</span>
+          </div>
+          <table id="audit-table"></table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODALE AJOUTER AU RESEAU -->
+  <div id="modal-entity" class="modal" onclick="if(event.target===this)closeModal('modal-entity')">
+    <div class="modal-box">
+      <h2>Enregistrer une Entite (Stockage Confidentiel SQLite)</h2>
+      <p class="muted" style="font-size:0.82rem;margin-top:0">
+        Les personnes et mentors restent pseudonymises tant qu'aucun match mutuel ne depasse le seuil de confiance.
+      </p>
+      <form onsubmit="submitEntity(event)">
+        <label>Nom ou intitule</label>
+        <input name="name" required placeholder="Ex: Dr. Koffi Mensah / Projet AgriIA" />
+        <div class="grid-2">
+          <div>
+            <label>Type d'entite</label>
+            <select name="kind">
+              <option value="personne">Personne / Contributeur</option>
+              <option value="mentor">Mentor</option>
+              <option value="projet">Projet</option>
+              <option value="formation_ressource">Formation / Ressource</option>
+              <option value="communaute">Communaute</option>
+            </select>
+          </div>
+          <div>
+            <label>Univers principal</label>
+            <select name="universe">
+              <option value="Projets & Innovation">Projets & Innovation</option>
+              <option value="Mentorat & Accompagnement">Mentorat & Accompagnement</option>
+              <option value="Apprentissage & Competences">Apprentissage & Competences</option>
+              <option value="Services & Expertise">Services & Expertise</option>
+              <option value="Communautes & Evenements">Communautes & Evenements</option>
+              <option value="Opportunites & Ressources">Opportunites & Ressources</option>
+            </select>
+          </div>
+        </div>
+        <label>Titre / Accroche</label>
+        <input name="headline" required placeholder="Ex: Chercheur IA & Mentor Data Science" />
+        <label>Competences (separees par des virgules)</label>
+        <input name="skills" required placeholder="Python, Machine Learning, NLP" />
+        <div class="grid-2">
+          <div>
+            <label>Experience (ans)</label>
+            <input name="experience_years" type="number" step="0.5" value="3" required />
+          </div>
+          <div>
+            <label>Disponibilite (h/sem)</label>
+            <input name="availability_hours_week" type="number" value="12" required />
+          </div>
+        </div>
+        <label>Objectifs & description</label>
+        <textarea name="bio_and_goals" rows="2" required placeholder="Souhaite accompagner des etudiants et collaborer sur des projets IA"></textarea>
+        <label class="check-label"><input type="checkbox" name="open_to_mentor" value="true" /> Disponible pour du mentorat / enseignement</label>
+        <div class="modal-footer">
+          <button type="button" class="btn-outline" onclick="closeModal('modal-entity')">Annuler</button>
+          <button type="submit" class="btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
